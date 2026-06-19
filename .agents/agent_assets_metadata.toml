@@ -1,0 +1,31 @@
+uploads = []
+
+[[generated]]
+id = "pfBwvYvpAuK0p9_ugBZW5"
+uri = "file://attached_assets/generated_images/aihand_logo.png"
+type = "image"
+title = "ai human hand logo"
+
+[[generated]]
+id = "0EFPoqUNQ5Ux925V3IJO5"
+uri = "file://attached_assets/generated_images/aihand_icon.png"
+type = "image"
+title = "ai human hand icon"
+
+[[generated]]
+id = "2sAGuLHW38grpDzN4WpVM"
+uri = "file://attached_assets/generated_images/aihand_emblem.png"
+type = "image"
+title = "ai spark emblem logo"
+
+[[outputs]]
+id = "vz25KNl8ThRQbYeUd34kJ"
+uri = "file://마이베스트_발명창업_사용자_매뉴얼.md"
+type = "text"
+title = "사용자 매뉴얼 (User Manual)"
+
+[[outputs]]
+id = "uMdqE_-Rg14_9ZbVyKWAw"
+uri = "file://마이베스트_발명창업_관리자_매뉴얼.md"
+type = "text"
+title = "관리자 매뉴얼 (Admin Manual)"
