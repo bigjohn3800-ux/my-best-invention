@@ -2,6 +2,13 @@
 node_modules/
 .pnpm-store/
 .yarn/
+.npm-cache/
+
+# Caches / temp / tooling
+.pw-browsers/
+.replit-import-tmp-*/
+.static-preview.*
+.vite-preview.*
 
 # Build outputs
 dist/
