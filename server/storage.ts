@@ -14,10 +14,12 @@ import {
   type FranchiseInquiry, type InsertFranchiseInquiry,
   type GalleryPost, type InsertGalleryPost, type GalleryLike,
   type AiUsageLog, type InsertAiUsageLog,
+  type Plan, type InsertPlan, type Subscription, type Order, type Payment, type Share,
   users, courses, userProgress, aiIdeas,
   inventionProjects, businessCanvases, diagnosticResults,
   organizations, userOrganizations, badges, userBadges, guestAiUsage,
   franchiseInquiries, galleryPosts, galleryLikes, aiUsageLogs,
+  plans, subscriptions, orders, payments, shares,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, count, sql, gte, ilike, or, type SQL } from "drizzle-orm";
@@ -708,6 +710,76 @@ export class DatabaseStorage implements IStorage {
       };
     }));
     return { memberCount: memberIds.length, stats: stats.filter(Boolean) };
+  }
+
+  // ===== Billing / 수익화 =====
+  async getPlans(): Promise<Plan[]> {
+    return db.select().from(plans).where(eq(plans.active, true)).orderBy(plans.sortOrder);
+  }
+  async getPlanByCode(code: string): Promise<Plan | undefined> {
+    const [plan] = await db.select().from(plans).where(eq(plans.code, code));
+    return plan;
+  }
+  async upsertPlan(plan: InsertPlan): Promise<Plan> {
+    const existing = await this.getPlanByCode(plan.code);
+    if (existing) {
+      const [updated] = await db.update(plans).set(plan).where(eq(plans.code, plan.code)).returning();
+      return updated;
+    }
+    const [created] = await db.insert(plans).values(plan).returning();
+    return created;
+  }
+  async createOrder(o: { orderId: string; userId?: number | null; planCode: string; orderName: string; amount: number; customerName?: string | null; }): Promise<Order> {
+    const [created] = await db.insert(orders).values({
+      orderId: o.orderId, userId: o.userId ?? null, planCode: o.planCode,
+      orderName: o.orderName, amount: o.amount, customerName: o.customerName ?? null,
+    }).returning();
+    return created;
+  }
+  async getOrder(orderId: string): Promise<Order | undefined> {
+    const [order] = await db.select().from(orders).where(eq(orders.orderId, orderId));
+    return order;
+  }
+  async updateOrderStatus(orderId: string, status: string): Promise<void> {
+    await db.update(orders).set({ status }).where(eq(orders.orderId, orderId));
+  }
+  async createPayment(p: { orderId: string; paymentKey: string; method?: string | null; amount: number; status: string; approvedAt?: Date | null; raw?: Record<string, any> | null; }): Promise<Payment> {
+    const [created] = await db.insert(payments).values({
+      orderId: p.orderId, paymentKey: p.paymentKey, method: p.method ?? null,
+      amount: p.amount, status: p.status, approvedAt: p.approvedAt ?? null, raw: p.raw ?? null,
+    }).returning();
+    return created;
+  }
+  async getActiveSubscription(userId: number): Promise<Subscription | undefined> {
+    const [sub] = await db.select().from(subscriptions)
+      .where(and(eq(subscriptions.userId, userId), eq(subscriptions.status, "active")))
+      .orderBy(desc(subscriptions.startedAt));
+    return sub;
+  }
+  async activateSubscription(userId: number, planCode: string, currentPeriodEnd: Date | null): Promise<Subscription> {
+    await db.update(subscriptions).set({ status: "expired" })
+      .where(and(eq(subscriptions.userId, userId), eq(subscriptions.status, "active")));
+    const [created] = await db.insert(subscriptions).values({
+      userId, planCode, status: "active", currentPeriodEnd,
+    }).returning();
+    return created;
+  }
+
+  // ===== 결과물 공유 =====
+  async createShare(s: { token: string; userId?: number | null; authorName?: string | null; type: string; refId?: number | null; title: string; summary?: string | null; payload?: Record<string, any> | null; }): Promise<Share> {
+    const [created] = await db.insert(shares).values({
+      token: s.token, userId: s.userId ?? null, authorName: s.authorName ?? null,
+      type: s.type, refId: s.refId ?? null, title: s.title,
+      summary: s.summary ?? null, payload: s.payload ?? null,
+    }).returning();
+    return created;
+  }
+  async getShareByToken(token: string): Promise<Share | undefined> {
+    const [share] = await db.select().from(shares).where(eq(shares.token, token));
+    return share;
+  }
+  async incrementShareViews(token: string): Promise<void> {
+    await db.update(shares).set({ viewCount: sql`${shares.viewCount} + 1` }).where(eq(shares.token, token));
   }
 }
 

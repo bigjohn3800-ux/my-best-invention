@@ -16,51 +16,51 @@ import { Button } from "@/components/ui/button";
 
 const plans = [
   {
-    name: "Inventor Beta",
+    name: "Free 체험",
     price: "무료",
-    unit: "체험",
-    desc: "처음 아이디어를 정리하고 AI 발명 흐름을 확인하는 개인 사용자",
+    unit: "",
+    desc: "처음 아이디어를 정리하고 AI 발명·창업 흐름을 확인하는 개인 사용자",
     cta: "무료로 시작",
     href: "/auth",
     icon: Lightbulb,
     features: [
-      "AI 발명 아이디어 체험",
+      "AI 발명·창업 도구 체험 (2회)",
       "창의성·창업 기본 진단",
-      "발명 프로젝트 초안 저장",
-      "기본 강좌와 가이드 접근",
+      "프로젝트 초안 저장",
+      "보고서 미리보기 (워터마크)",
     ],
   },
   {
-    name: "Venture Builder",
-    price: "유료 전환 준비",
-    unit: "월/프로젝트",
-    desc: "특허, 시장검증, 사업계획, IR까지 이어가는 실전 창업 준비팀",
-    cta: "우선 이용 신청",
-    href: "/franchise",
+    name: "Pro 개인",
+    price: "₩17,900",
+    unit: "월",
+    desc: "특허·시장검증·사업계획·IR·학교제출 보고서까지 제대로 활용하는 개인",
+    cta: "Pro 시작하기",
+    href: "/checkout?plan=pro_monthly",
     icon: Rocket,
     featured: true,
     features: [
-      "비공개 프로젝트 워크스페이스",
+      "AI 발명·창업 도구 공정사용 무제한",
       "SCAMPER·TRIZ·특허 명세서 초안",
       "BMC·IR·정부지원 제출 자료 생성",
-      "멘토 리뷰 요청과 코멘트 기록",
-      "사업화 준비도 대시보드",
+      "보고서 정식 PDF 무제한 다운로드",
+      "포트폴리오·수료증",
     ],
   },
   {
-    name: "Institution",
-    price: "맞춤 견적",
-    unit: "기관/교육",
-    desc: "학교, 교육기관, 창업캠프, 발명대회 운영자가 쓰는 단체형",
+    name: "기관 (B2B)",
+    price: "좌석당 ₩20,000",
+    unit: "연",
+    desc: "학교·학원·기관, 창업캠프·발명대회 운영자를 위한 단체 라이선스",
     cta: "도입 문의",
     href: "/franchise",
     icon: Building2,
     features: [
-      "단체 회원과 그룹 관리자",
-      "프로젝트·진도·결과물 관리",
+      "좌석 라이선스 (학사년도 단위)",
+      "단체 회원·그룹 관리자·진도관리",
       "교육용 커리큘럼 운영",
-      "관리자 리뷰와 보고 흐름",
-      "운영 정책과 결제 방식 협의",
+      "캠프·대회 패키지 / 교사 연수",
+      "세금계산서·운영 협의",
     ],
   },
 ];
@@ -101,7 +101,7 @@ export default function PricingPage() {
             </div>
             <h1 className="mt-5 text-4xl sm:text-5xl font-bold text-white leading-tight">발명 아이디어가 실제 구매·투자 검토 자료가 되도록</h1>
             <p className="mt-4 text-lg text-muted-foreground">
-              현재는 무료 베타와 기관 도입 문의를 중심으로 운영하고, 결제는 가격·환불·검토 정책 확정 후 Toss Payments 기반으로 활성화할 수 있게 준비합니다.
+              개인은 Pro 구독으로 AI 도구와 보고서를 무제한 활용하고, 기관은 좌석 라이선스로 단체 운영합니다. 결제는 Toss Payments로 안전하게 처리됩니다.
             </p>
           </div>
 

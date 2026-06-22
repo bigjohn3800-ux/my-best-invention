@@ -198,6 +198,81 @@ export const galleryLikesRelations = relations(galleryLikes, ({ one }) => ({
   post: one(galleryPosts, { fields: [galleryLikes.postId], references: [galleryPosts.id] }),
 }));
 
+// ===== Billing / 수익화 (Toss Payments) =====
+export const plans = pgTable("plans", {
+  id: serial("id").primaryKey(),
+  code: text("code").notNull().unique(),            // pro_monthly | pro_yearly | b2b_seat
+  name: text("name").notNull(),
+  audience: text("audience").default("b2c").notNull(), // b2c | b2b
+  interval: text("interval").default("month").notNull(), // month | year | once
+  amount: integer("amount").notNull(),              // 원(KRW)
+  aiQuota: integer("ai_quota").default(-1).notNull(), // -1 = 공정사용 무제한
+  features: jsonb("features").$type<string[]>().default([]),
+  active: boolean("active").default(true).notNull(),
+  sortOrder: integer("sort_order").default(0).notNull(),
+});
+
+export const subscriptions = pgTable("subscriptions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  planCode: text("plan_code").notNull(),
+  status: text("status").default("active").notNull(), // active | canceled | expired
+  startedAt: timestamp("started_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+  currentPeriodEnd: timestamp("current_period_end"),
+  organizationId: integer("organization_id").references(() => organizations.id),
+  seats: integer("seats").default(1).notNull(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+}, (table) => [
+  index("subscriptions_user_idx").on(table.userId),
+]);
+
+export const orders = pgTable("orders", {
+  id: serial("id").primaryKey(),
+  orderId: text("order_id").notNull().unique(),     // 토스로 전달하는 주문번호
+  userId: integer("user_id").references(() => users.id),
+  planCode: text("plan_code").notNull(),
+  orderName: text("order_name").notNull(),
+  amount: integer("amount").notNull(),
+  status: text("status").default("pending").notNull(), // pending | paid | failed | canceled
+  customerName: text("customer_name"),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+});
+
+export const payments = pgTable("payments", {
+  id: serial("id").primaryKey(),
+  orderId: text("order_id").notNull(),
+  paymentKey: text("payment_key").notNull().unique(),
+  method: text("method"),
+  amount: integer("amount").notNull(),
+  status: text("status").notNull(),
+  approvedAt: timestamp("approved_at"),
+  raw: jsonb("raw").$type<Record<string, any>>(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+});
+
+export const insertPlanSchema = createInsertSchema(plans).omit({ id: true });
+export type Plan = typeof plans.$inferSelect;
+export type InsertPlan = z.infer<typeof insertPlanSchema>;
+export type Subscription = typeof subscriptions.$inferSelect;
+export type Order = typeof orders.$inferSelect;
+export type Payment = typeof payments.$inferSelect;
+
+// ===== 결과물 공유 (바이럴) =====
+export const shares = pgTable("shares", {
+  id: serial("id").primaryKey(),
+  token: text("token").notNull().unique(),         // 공개 URL 토큰
+  userId: integer("user_id").references(() => users.id),
+  authorName: text("author_name"),                 // 표시용 작성자명
+  type: text("type").notNull(),                    // invention | canvas | diagnosis
+  refId: integer("ref_id"),                         // 원본 결과물 id(참고용)
+  title: text("title").notNull(),
+  summary: text("summary"),
+  payload: jsonb("payload").$type<Record<string, any>>(), // 렌더링 스냅샷(공개 안전 데이터만)
+  viewCount: integer("view_count").default(0).notNull(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+});
+export type Share = typeof shares.$inferSelect;
+
 export const insertFranchiseInquirySchema = createInsertSchema(franchiseInquiries).omit({ id: true, status: true, createdAt: true });
 export type FranchiseInquiry = typeof franchiseInquiries.$inferSelect;
 export type InsertFranchiseInquiry = z.infer<typeof insertFranchiseInquirySchema>;

@@ -19,6 +19,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
+import ShareButton from "@/components/share-button";
 import { useState, useRef, useCallback } from "react";
 import { Link } from "wouter";
 import type { InventionProject, BusinessCanvas, DiagnosticResult } from "@shared/schema";
@@ -84,13 +85,27 @@ function InventionCard({ project }: { project: InventionProject }) {
       {project.problem && (
         <p className="mt-3 text-sm text-gray-400 line-clamp-2">{project.problem}</p>
       )}
-      <div className="mt-3 flex items-center gap-3">
+      <div className="mt-3 flex items-center gap-2 flex-wrap">
         <Link href={`/invention-studio?projectId=${project.id}`}>
           <Button size="sm" variant="outline" className="border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/10 text-xs" data-testid={`button-continue-invention-${project.id}`}>
             <Edit3 className="w-3 h-3 mr-1" />
             이어서 작업
           </Button>
         </Link>
+        <ShareButton
+          type="invention"
+          refId={project.id}
+          title={project.title}
+          summary={project.problem || project.solution || undefined}
+          payload={{
+            highlights: [
+              { label: "해결할 문제", value: project.problem || "" },
+              { label: "해결 방법", value: project.solution || "" },
+              { label: "대상", value: project.target || "" },
+            ].filter((h) => h.value),
+            body: project.patentDraft || project.trizNotes || undefined,
+          }}
+        />
       </div>
       <ExpandableSection title={`invention-${project.id}`}>
         <DetailRow label="해결할 문제" value={project.problem} />
@@ -152,13 +167,27 @@ function CanvasCard({ canvas }: { canvas: BusinessCanvas }) {
       {canvas.valueProposition && (
         <p className="mt-3 text-sm text-gray-400 line-clamp-2">{canvas.valueProposition}</p>
       )}
-      <div className="mt-3 flex items-center gap-3">
+      <div className="mt-3 flex items-center gap-2 flex-wrap">
         <Link href={`/startup-lab?canvasId=${canvas.id}`}>
           <Button size="sm" variant="outline" className="border-purple-500/30 text-purple-300 hover:bg-purple-500/10 text-xs" data-testid={`button-continue-canvas-${canvas.id}`}>
             <Edit3 className="w-3 h-3 mr-1" />
             이어서 작업
           </Button>
         </Link>
+        <ShareButton
+          type="canvas"
+          refId={canvas.id}
+          title={canvas.title}
+          summary={canvas.valueProposition || undefined}
+          payload={{
+            highlights: [
+              { label: "가치 제안", value: canvas.valueProposition || "" },
+              { label: "고객 세그먼트", value: canvas.customerSegments || "" },
+              { label: "수익원", value: canvas.revenueStreams || "" },
+            ].filter((h) => h.value),
+            body: canvas.pitchDeck || canvas.aiFeedback || undefined,
+          }}
+        />
       </div>
       <ExpandableSection title={`canvas-${canvas.id}`}>
         {bmcFields.map(({ key, label }) => (
@@ -216,6 +245,18 @@ function DiagnosticCard({ result }: { result: DiagnosticResult }) {
           ))}
         </div>
       )}
+      <div className="mt-3">
+        <ShareButton
+          type="diagnosis"
+          refId={result.id}
+          title={`${typeLabel} 결과`}
+          summary={result.scores ? Object.entries(result.scores).map(([k, v]) => `${categoryLabels[k] || k} ${v}/10`).join(", ") : undefined}
+          payload={{
+            highlights: result.scores ? Object.entries(result.scores).map(([k, v]) => ({ label: categoryLabels[k] || k, value: `${v} / 10` })) : [],
+            body: result.aiAnalysis || undefined,
+          }}
+        />
+      </div>
       <ExpandableSection title={`diagnostic-${result.id}`}>
         {result.aiAnalysis && (
           <div>

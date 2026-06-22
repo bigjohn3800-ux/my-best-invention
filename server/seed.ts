@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { courses, badges, users } from "@shared/schema";
+import { courses, badges, users, plans } from "@shared/schema";
 import { hashPassword } from "./auth";
 import { eq } from "drizzle-orm";
 
@@ -1088,4 +1088,32 @@ export async function seedDatabase() {
     }
   }
   console.log(`Badges seeded: ${badgeData.length} defined, ${badgeData.length - existingBadges.length} new`);
+
+  // ===== 요금제(Plans) 시드 =====
+  const planData = [
+    {
+      code: "pro_monthly", name: "Pro 개인 (월)", audience: "b2c", interval: "month",
+      amount: 17900, aiQuota: -1, sortOrder: 1,
+      features: ["AI 발명·창업 도구 공정사용 무제한", "보고서 정식 PDF 무제한 다운로드", "포트폴리오·수료증", "광고 없는 집중 모드"],
+    },
+    {
+      code: "pro_yearly", name: "Pro 개인 (연)", audience: "b2c", interval: "year",
+      amount: 179000, aiQuota: -1, sortOrder: 2,
+      features: ["월 환산 약 2개월 할인", "Pro 개인 모든 혜택", "가족 추가 좌석 옵션"],
+    },
+    {
+      code: "b2b_seat", name: "기관 좌석 라이선스 (연/좌석)", audience: "b2b", interval: "year",
+      amount: 20000, aiQuota: -1, sortOrder: 3,
+      features: ["학교·학원 학사년도 단위", "단체 대시보드·진도관리", "좌석 수 협의 / 세금계산서"],
+    },
+  ];
+  for (const plan of planData) {
+    const [existing] = await db.select().from(plans).where(eq(plans.code, plan.code));
+    if (existing) {
+      await db.update(plans).set(plan).where(eq(plans.code, plan.code));
+    } else {
+      await db.insert(plans).values(plan);
+    }
+  }
+  console.log(`Plans seeded: ${planData.length} defined`);
 }

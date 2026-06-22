@@ -5,6 +5,7 @@ import { setupAuth } from "./auth";
 import OpenAI from "openai";
 import { randomBytes, createHash } from "crypto";
 import { computeIpUaHash } from "./ip-ua-hash";
+import { confirmPayment } from "./toss";
 import fs from "fs";
 import path from "path";
 import { z } from "zod";
@@ -1523,6 +1524,173 @@ ${template.sections.join("\n")}
     }
     const content = fs.readFileSync(filePath, "utf-8");
     res.json({ content });
+  });
+
+  // ===== Billing / 결제 (Toss Payments) =====
+  // 공개: 요금제 목록
+  app.get("/api/billing/plans", async (_req, res) => {
+    try {
+      const list = await storage.getPlans();
+      res.json(list);
+    } catch (e) {
+      res.status(500).json({ error: "요금제를 불러오지 못했습니다." });
+    }
+  });
+
+  // 클라이언트 결제위젯에 쓸 공개 설정(클라이언트키)
+  app.get("/api/billing/config", (_req, res) => {
+    res.json({
+      clientKey: process.env.VITE_TOSS_CLIENT_KEY || process.env.TOSS_CLIENT_KEY || "test_gck_docs_Ovk5rk1EwkEbP0W43n07xlzm",
+    });
+  });
+
+  // 현재 사용자 구독 상태
+  app.get("/api/billing/subscription", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const sub = await storage.getActiveSubscription(req.user!.id);
+    res.json({ subscription: sub ?? null });
+  });
+
+  // 주문 생성: 결제 전 서버에서 금액을 확정(위변조 방지)
+  app.post("/api/billing/orders", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).json({ error: "로그인이 필요합니다." });
+    try {
+      const planCode = String(req.body?.planCode || "");
+      const plan = await storage.getPlanByCode(planCode);
+      if (!plan || !plan.active) return res.status(404).json({ error: "유효하지 않은 요금제입니다." });
+      const orderId = `mbi_${Date.now()}_${randomBytes(6).toString("hex")}`;
+      const customerName = req.user!.displayName || req.user!.username;
+      await storage.createOrder({
+        orderId, userId: req.user!.id, planCode: plan.code,
+        orderName: plan.name, amount: plan.amount, customerName,
+      });
+      res.json({
+        orderId, orderName: plan.name, amount: plan.amount,
+        customerName, customerKey: `user_${req.user!.id}`,
+      });
+    } catch (e) {
+      res.status(500).json({ error: "주문 생성 중 오류가 발생했습니다." });
+    }
+  });
+
+  // 결제 승인: 위젯/리다이렉트에서 받은 값으로 서버가 최종 승인 + 구독 활성화
+  app.post("/api/billing/confirm", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).json({ error: "로그인이 필요합니다." });
+    try {
+      const paymentKey = String(req.body?.paymentKey || "");
+      const orderId = String(req.body?.orderId || "");
+      const amount = Number(req.body?.amount || 0);
+      if (!paymentKey || !orderId || !amount) return res.status(400).json({ error: "결제 정보가 올바르지 않습니다." });
+
+      const order = await storage.getOrder(orderId);
+      if (!order) return res.status(404).json({ error: "주문을 찾을 수 없습니다." });
+      if (order.userId !== req.user!.id) return res.status(403).json({ error: "주문 소유자가 아닙니다." });
+      if (order.status === "paid") return res.json({ ok: true, alreadyPaid: true });
+      if (order.amount !== amount) {
+        await storage.updateOrderStatus(orderId, "failed");
+        return res.status(400).json({ error: "결제 금액이 일치하지 않습니다." });
+      }
+
+      // 토스 서버 승인
+      const payment = await confirmPayment(paymentKey, orderId, amount);
+
+      await storage.createPayment({
+        orderId, paymentKey, method: payment.method ?? null, amount,
+        status: payment.status, approvedAt: payment.approvedAt ? new Date(payment.approvedAt) : new Date(), raw: payment,
+      });
+      await storage.updateOrderStatus(orderId, "paid");
+
+      // 구독 활성화 (월/연 기간 계산)
+      const plan = await storage.getPlanByCode(order.planCode);
+      let end: Date | null = null;
+      if (plan?.interval === "month") { end = new Date(); end.setMonth(end.getMonth() + 1); }
+      else if (plan?.interval === "year") { end = new Date(); end.setFullYear(end.getFullYear() + 1); }
+      await storage.activateSubscription(req.user!.id, order.planCode, end);
+
+      res.json({ ok: true, planCode: order.planCode, currentPeriodEnd: end });
+    } catch (e) {
+      const err = e as Error & { code?: string };
+      try { await storage.updateOrderStatus(String(req.body?.orderId || ""), "failed"); } catch {}
+      res.status(400).json({ error: err.message || "결제 승인에 실패했습니다.", code: err.code });
+    }
+  });
+
+  // 토스 웹훅(결제 상태 변경 알림) — 기록용
+  app.post("/api/billing/webhook", async (req, res) => {
+    try {
+      const data = req.body || {};
+      const orderId = data?.data?.orderId || data?.orderId;
+      const status = data?.data?.status || data?.status;
+      if (orderId && status === "DONE") {
+        const order = await storage.getOrder(orderId);
+        if (order && order.status !== "paid") await storage.updateOrderStatus(orderId, "paid");
+      }
+      res.sendStatus(200);
+    } catch (e) {
+      res.sendStatus(200); // 웹훅은 항상 200 (재시도 폭주 방지)
+    }
+  });
+
+  // ===== 결과물 공유 (바이럴 유입) =====
+  function escapeAttr(s: string): string {
+    return String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  // 공유 데이터 조회(공개)
+  app.get("/api/shares/:token", async (req, res) => {
+    const share = await storage.getShareByToken(req.params.token);
+    if (!share) return res.status(404).json({ error: "공유를 찾을 수 없습니다." });
+    storage.incrementShareViews(req.params.token).catch(() => {});
+    res.json(share);
+  });
+
+  // 공유 생성(로그인 필요)
+  app.post("/api/shares", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).json({ error: "로그인이 필요합니다." });
+    try {
+      const type = String(req.body?.type || "");
+      if (!["invention", "canvas", "diagnosis"].includes(type)) return res.status(400).json({ error: "잘못된 공유 유형입니다." });
+      const title = clampText(req.body?.title, 120) || "마이베스트 발명창업 결과물";
+      const summary = clampText(req.body?.summary, 280);
+      const payload = (req.body?.payload && typeof req.body.payload === "object") ? req.body.payload : null;
+      const refId = req.body?.refId ? Number(req.body.refId) : null;
+      const token = randomBytes(8).toString("base64url");
+      const authorName = req.user!.displayName || req.user!.username;
+      await storage.createShare({ token, userId: req.user!.id, authorName, type, refId, title, summary, payload });
+      const base = process.env.APP_ORIGIN || `${req.protocol}://${req.get("host")}`;
+      res.json({ token, url: `${base}/share/${token}` });
+    } catch (e) {
+      res.status(500).json({ error: "공유 생성 중 오류가 발생했습니다." });
+    }
+  });
+
+  // 공개 공유 페이지: 카카오톡/SNS 크롤러용 OG 메타 주입(프로덕션). 그 외엔 SPA가 렌더.
+  app.get("/share/:token", async (req, res, next) => {
+    if (process.env.NODE_ENV !== "production") return next(); // dev: Vite가 SPA 서빙
+    try {
+      const share = await storage.getShareByToken(req.params.token);
+      const idxPath = path.resolve("dist", "public", "index.html");
+      let html = fs.readFileSync(idxPath, "utf-8");
+      if (share) {
+        const base = process.env.APP_ORIGIN || `${req.protocol}://${req.get("host")}`;
+        const t = escapeAttr(`${share.title} · 마이베스트 발명창업`);
+        const d = escapeAttr(share.summary || "AI로 만든 발명·창업 결과물을 확인해보세요.");
+        const url = escapeAttr(`${base}/share/${share.token}`);
+        const img = escapeAttr(`${base}/og-thumbnail.png`);
+        html = html
+          .replace(/<title>[^<]*<\/title>/, `<title>${t}</title>`)
+          .replace(/(<meta property="og:title" content=")[^"]*(")/, `$1${t}$2`)
+          .replace(/(<meta property="og:description" content=")[^"]*(")/, `$1${d}$2`)
+          .replace(/(<meta property="og:image" content=")[^"]*(")/, `$1${img}$2`)
+          .replace(/(<meta name="twitter:title" content=")[^"]*(")/, `$1${t}$2`)
+          .replace(/(<meta name="twitter:description" content=")[^"]*(")/, `$1${d}$2`)
+          .replace(/(<meta name="twitter:image" content=")[^"]*(")/, `$1${img}$2`)
+          .replace(/<meta property="og:type" content="[^"]*"\s*\/>/, `<meta property="og:type" content="article" />\n    <meta property="og:url" content="${url}" />`);
+      }
+      res.status(200).set("Content-Type", "text/html").end(html);
+    } catch (e) {
+      next();
+    }
   });
 
   return httpServer;

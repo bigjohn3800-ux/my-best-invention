@@ -26,12 +26,20 @@ import GuidePage from "@/pages/guide-page";
 import CommunityPage from "@/pages/community-page";
 import ManualPage from "@/pages/manual-page";
 import AudiencesPage from "@/pages/audiences-page";
+import CheckoutPage from "@/pages/checkout-page";
+import PaymentSuccessPage from "@/pages/payment-success-page";
+import PaymentFailPage from "@/pages/payment-fail-page";
+import ShareViewPage from "@/pages/share-view-page";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={HomePage} />
       <Route path="/pricing" component={PricingPage} />
+      <Route path="/share/:token" component={ShareViewPage} />
+      <Route path="/checkout" component={CheckoutPage} />
+      <Route path="/payment/success" component={PaymentSuccessPage} />
+      <Route path="/payment/fail" component={PaymentFailPage} />
       <Route path="/auth" component={AuthPage} />
       <Route path="/inspiration" component={InspirationPage} />
       <Route path="/invention">
