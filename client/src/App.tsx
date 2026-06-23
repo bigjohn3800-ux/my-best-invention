@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -5,31 +6,41 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute, RoleProtectedRoute } from "@/lib/protected-route";
-import NotFound from "@/pages/not-found";
-import HomePage from "@/pages/home-page";
-import AuthPage from "@/pages/auth-page";
-import LegalPage from "@/pages/legal-page";
-import PricingPage from "@/pages/pricing-page";
-import CourseListPage from "@/pages/course-list-page";
-import CourseDetailPage from "@/pages/course-detail-page";
-import DashboardPage from "@/pages/dashboard-page";
-import InventionStudioPage from "@/pages/invention-studio-page";
-import StartupLabPage from "@/pages/startup-lab-page";
-import DiagnosisPage from "@/pages/diagnosis-page";
-import InspirationPage from "@/pages/inspiration-page";
-import IdeaNotesPage from "@/pages/idea-notes-page";
-import AdminPage from "@/pages/admin-page";
-import AdminMembersPage from "@/pages/admin-members-page";
-import AdminGroupPage from "@/pages/admin-group-page";
-import FranchisePage from "@/pages/franchise-page";
-import GuidePage from "@/pages/guide-page";
-import CommunityPage from "@/pages/community-page";
-import ManualPage from "@/pages/manual-page";
-import AudiencesPage from "@/pages/audiences-page";
-import CheckoutPage from "@/pages/checkout-page";
-import PaymentSuccessPage from "@/pages/payment-success-page";
-import PaymentFailPage from "@/pages/payment-fail-page";
-import ShareViewPage from "@/pages/share-view-page";
+import { Loader2 } from "lucide-react";
+
+const NotFound = lazy(() => import("@/pages/not-found"));
+const HomePage = lazy(() => import("@/pages/home-page"));
+const AuthPage = lazy(() => import("@/pages/auth-page"));
+const LegalPage = lazy(() => import("@/pages/legal-page"));
+const PricingPage = lazy(() => import("@/pages/pricing-page"));
+const CourseListPage = lazy(() => import("@/pages/course-list-page"));
+const CourseDetailPage = lazy(() => import("@/pages/course-detail-page"));
+const DashboardPage = lazy(() => import("@/pages/dashboard-page"));
+const InventionStudioPage = lazy(() => import("@/pages/invention-studio-page"));
+const StartupLabPage = lazy(() => import("@/pages/startup-lab-page"));
+const DiagnosisPage = lazy(() => import("@/pages/diagnosis-page"));
+const InspirationPage = lazy(() => import("@/pages/inspiration-page"));
+const IdeaNotesPage = lazy(() => import("@/pages/idea-notes-page"));
+const AdminPage = lazy(() => import("@/pages/admin-page"));
+const AdminMembersPage = lazy(() => import("@/pages/admin-members-page"));
+const AdminGroupPage = lazy(() => import("@/pages/admin-group-page"));
+const FranchisePage = lazy(() => import("@/pages/franchise-page"));
+const GuidePage = lazy(() => import("@/pages/guide-page"));
+const CommunityPage = lazy(() => import("@/pages/community-page"));
+const ManualPage = lazy(() => import("@/pages/manual-page"));
+const AudiencesPage = lazy(() => import("@/pages/audiences-page"));
+const CheckoutPage = lazy(() => import("@/pages/checkout-page"));
+const PaymentSuccessPage = lazy(() => import("@/pages/payment-success-page"));
+const PaymentFailPage = lazy(() => import("@/pages/payment-fail-page"));
+const ShareViewPage = lazy(() => import("@/pages/share-view-page"));
+
+function RouteLoading() {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <Loader2 className="h-8 w-8 animate-spin text-cyan-300" />
+    </div>
+  );
+}
 
 function Router() {
   return (
@@ -74,7 +85,9 @@ function App() {
       <AuthProvider>
         <TooltipProvider>
           <Toaster />
-          <Router />
+          <Suspense fallback={<RouteLoading />}>
+            <Router />
+          </Suspense>
         </TooltipProvider>
       </AuthProvider>
     </QueryClientProvider>

@@ -93,9 +93,9 @@ const packages = [
   },
   {
     name: "Venture Builder",
-    price: "유료 준비",
-    desc: "특허·시장·IR까지 이어가는 창업 준비팀용",
-    points: ["사업화 로드맵", "BMC/IR 생성", "전문가 리뷰 요청"],
+    price: "구독 준비중",
+    desc: "트래픽과 반복 사용 지표가 쌓인 뒤 열 실전 창업 준비팀용",
+    points: ["사업화 로드맵", "BMC/IR 생성", "품질 검증 후 Pro 오픈"],
     href: "/pricing",
     highlighted: true,
   },
@@ -193,13 +193,14 @@ export default function HomePage() {
             <motion.div variants={fadeUp}>
               <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/35 bg-amber-400/10 px-3 py-1.5 text-xs font-semibold text-amber-200 mb-5">
                 <LockKeyhole className="w-3.5 h-3.5" />
-                발명 아이디어는 비공개 프로젝트로 관리됩니다
+                17. 모두의 창업, 발명 · Invention Ventures Hub
               </div>
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-normal leading-[1.08] text-white" data-testid="text-hero-title">
-                Invention Ventures Hub
+                모두의 창업, 발명
               </h1>
               <p className="mt-5 text-lg sm:text-xl text-muted-foreground max-w-2xl">
-                발명 아이디어를 특허 검토, 시장 검증, 사업계획, IR 자료까지 이어주는 AI 기반 발명 사업화 워크스페이스입니다.
+                AI 시대, 자신의 도메인과 특징, 캐릭터를 기반으로 발명과 창업을 실천하며 시대정신인 주도성을 키우는 깊은 학습 프로그램입니다.
+                아이디어는 특허 검토, 시장 검증, 사업계획, IR 자료까지 이어지는 사업화 워크스페이스로 관리됩니다.
               </p>
               <div className="mt-7 flex flex-col sm:flex-row gap-3">
                 <Link href={user ? "/invention-studio" : "/auth"}>
@@ -229,7 +230,7 @@ export default function HomePage() {
 
             <motion.div variants={fadeUp} className="space-y-4">
               <div className="glass-card rounded-2xl overflow-hidden">
-                <video src={introVideoPath} controls muted loop playsInline className="w-full aspect-video object-cover" data-testid="video-intro" />
+                <video src={introVideoPath} controls muted loop playsInline preload="metadata" className="w-full aspect-video object-cover" data-testid="video-intro" />
               </div>
               <AiTrialWidget />
             </motion.div>
@@ -259,6 +260,34 @@ export default function HomePage() {
               ))}
             </div>
           </motion.div>
+        </div>
+      </section>
+
+      <section className="px-4 py-14">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid lg:grid-cols-[0.82fr_1.18fr] gap-8 items-start">
+            <div>
+              <p className="text-sm font-semibold text-amber-300">Quality before subscription</p>
+              <h2 className="text-3xl sm:text-4xl font-bold text-white mt-2">구독보다 먼저, 유료만큼의 완성도를 만듭니다</h2>
+              <p className="text-muted-foreground mt-3">
+                실제 결제와 구독은 사용자가 늘고 트래픽이 충분해진 뒤 열 예정입니다. 지금은 깊은 학습 프로그램으로서 콘텐츠, 결과물, 속도, 신뢰, 운영 구조를 먼저 끌어올립니다.
+              </p>
+            </div>
+            <div className="grid sm:grid-cols-2 gap-4">
+              {[
+                { title: "제출 가능한 결과물", desc: "특허 초안, BMC, IR, 생기부 활동기록, 자유학기 보고서를 샘플과 함께 고도화합니다.", icon: FileText },
+                { title: "주도성 중심 학습", desc: "학생의 도메인, 특징, 캐릭터를 발명·창업 프로젝트로 연결해 자기주도 학습 흐름을 만듭니다.", icon: Target },
+                { title: "기관이 믿는 운영", desc: "그룹, 진도, 결과물, 리뷰, 수료증을 관리할 수 있는 단체 운영 구조를 정리합니다.", icon: Users },
+                { title: "결제 전 신뢰 확보", desc: "환불, 개인정보, AI 활용 고지, 청소년보호, 보안 안내를 먼저 정비합니다.", icon: ShieldCheck },
+              ].map((item) => (
+                <div key={item.title} className="glass-card glass-card-hover rounded-2xl p-5">
+                  <item.icon className="w-6 h-6 text-cyan-300" />
+                  <h3 className="text-lg font-semibold text-white mt-4">{item.title}</h3>
+                  <p className="text-sm text-muted-foreground mt-2">{item.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 

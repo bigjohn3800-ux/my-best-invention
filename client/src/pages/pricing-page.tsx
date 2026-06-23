@@ -32,11 +32,11 @@ const plans = [
   },
   {
     name: "Pro 개인",
-    price: "₩17,900",
-    unit: "월",
+    price: "준비중",
+    unit: "트래픽 확보 후 오픈",
     desc: "특허·시장검증·사업계획·IR·학교제출 보고서까지 제대로 활용하는 개인",
-    cta: "Pro 시작하기",
-    href: "/checkout?plan=pro_monthly",
+    cta: "오픈 알림 받기",
+    href: "/franchise",
     icon: Rocket,
     featured: true,
     features: [
@@ -88,6 +88,20 @@ const buyerReasons = [
   },
 ];
 
+const launchCriteria = [
+  "반복 사용자가 충분히 쌓여 핵심 기능 재방문이 확인될 때",
+  "보고서·특허 초안·BMC·IR 결과물 샘플 품질이 일정 수준 이상일 때",
+  "무료 한도, Pro 권한, 환불·해지·청소년보호 정책이 명확해질 때",
+  "기관 도입 상담에서 실제 좌석·운영 수요가 검증될 때",
+];
+
+const trustItems = [
+  "결제 전까지는 무료 체험과 기관 상담 중심 운영",
+  "AI 결과물은 최종 제출 전 사용자가 검토하는 보조 자료로 안내",
+  "개인정보·학생 활동기록·아이디어 보호 문구 우선 정비",
+  "Toss 결제 코드는 준비하되 실 결제는 테스트 완료 후 오픈",
+];
+
 export default function PricingPage() {
   return (
     <div className="min-h-screen">
@@ -101,7 +115,7 @@ export default function PricingPage() {
             </div>
             <h1 className="mt-5 text-4xl sm:text-5xl font-bold text-white leading-tight">발명 아이디어가 실제 구매·투자 검토 자료가 되도록</h1>
             <p className="mt-4 text-lg text-muted-foreground">
-              개인은 Pro 구독으로 AI 도구와 보고서를 무제한 활용하고, 기관은 좌석 라이선스로 단체 운영합니다. 결제는 Toss Payments로 안전하게 처리됩니다.
+              지금은 무료 체험과 기관 도입 상담을 통해 사용자를 늘리고 품질을 검증합니다. Pro 구독과 실제 결제는 트래픽과 반복 사용 지표가 충분해진 뒤 열 예정입니다.
             </p>
           </div>
 
@@ -140,6 +154,35 @@ export default function PricingPage() {
           </div>
         </section>
 
+        <section className="max-w-7xl mx-auto mt-12">
+          <div className="glass-card rounded-2xl p-6 sm:p-8">
+            <div className="grid lg:grid-cols-[0.9fr_1.1fr] gap-6 items-start">
+              <div>
+                <p className="text-sm font-semibold text-cyan-300">Before paid launch</p>
+                <h2 className="text-2xl sm:text-3xl font-bold text-white mt-2">결제보다 먼저 유료만큼의 품질을 만듭니다</h2>
+                <p className="text-sm text-muted-foreground mt-3">
+                  사용자가 늘고 실제 활동 데이터가 쌓일 때까지는 결제를 서두르지 않습니다. 대신 결과물 품질, 학습 흐름, 속도, 신뢰 문구, 기관 운영 구조를 먼저 완성합니다.
+                </p>
+              </div>
+              <div className="grid sm:grid-cols-2 gap-3">
+                {[
+                  "결과물 샘플과 제출용 PDF 품질 강화",
+                  "무료 한도와 Pro 권한 기준 명확화",
+                  "환불·개인정보·청소년보호·AI 활용 고지 정비",
+                  "대시보드 사용량·프로젝트 진행률·다음 행동 강화",
+                ].map((item) => (
+                  <div key={item} className="rounded-xl border border-white/10 bg-white/[0.04] p-4">
+                    <p className="text-sm text-gray-100 flex gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-300 shrink-0 mt-0.5" />
+                      {item}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
         <section className="max-w-7xl mx-auto mt-16">
           <div className="grid lg:grid-cols-[0.78fr_1.22fr] gap-8">
             <div>
@@ -157,6 +200,35 @@ export default function PricingPage() {
                   <p className="text-sm text-muted-foreground mt-2">{reason.desc}</p>
                 </div>
               ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="max-w-7xl mx-auto mt-16">
+          <div className="grid lg:grid-cols-2 gap-5">
+            <div className="glass-card rounded-2xl p-6">
+              <p className="text-sm font-semibold text-emerald-300">Launch criteria</p>
+              <h2 className="text-2xl font-bold text-white mt-2">이 조건이 맞으면 유료 구독을 엽니다</h2>
+              <div className="mt-5 space-y-3">
+                {launchCriteria.map((item) => (
+                  <p key={item} className="text-sm text-gray-100 flex gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-300 shrink-0 mt-0.5" />
+                    {item}
+                  </p>
+                ))}
+              </div>
+            </div>
+            <div className="glass-card rounded-2xl p-6">
+              <p className="text-sm font-semibold text-cyan-300">Trust checklist</p>
+              <h2 className="text-2xl font-bold text-white mt-2">돈을 받기 전에 신뢰부터 쌓습니다</h2>
+              <div className="mt-5 space-y-3">
+                {trustItems.map((item) => (
+                  <p key={item} className="text-sm text-gray-100 flex gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-cyan-300 shrink-0 mt-0.5" />
+                    {item}
+                  </p>
+                ))}
+              </div>
             </div>
           </div>
         </section>
