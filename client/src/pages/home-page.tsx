@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import Navbar from "@/components/navbar";
 import OnboardingModal from "@/components/onboarding-modal";
+import SamplesShowcase from "@/components/samples-showcase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
@@ -269,6 +270,8 @@ export default function HomePage() {
           </motion.div>
         </div>
       </section>
+
+      <SamplesShowcase />
 
       <section className="px-4 py-14">
         <div className="max-w-7xl mx-auto">
