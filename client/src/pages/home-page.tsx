@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowRight,
@@ -163,11 +163,21 @@ function AiTrialWidget() {
         {result && (
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }} className="mt-4 rounded-xl border border-white/10 bg-white/5 p-4">
             <p className="text-sm text-gray-100 whitespace-pre-wrap leading-relaxed">{result}</p>
-            <Link href="/auth">
-              <Button size="sm" className="mt-4 gradient-primary text-white" data-testid="button-trial-signup">
-                프로젝트로 저장하기 <ArrowRight className="w-4 h-4 ml-1" />
-              </Button>
-            </Link>
+            <p className="text-xs text-cyan-200/90 mt-3 font-medium">
+              이 아이디어를 발명 스튜디오에서 SCAMPER·TRIZ로 발전시키고, 특허 초안·제출용 보고서까지 만들 수 있어요.
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Link href="/invention-studio">
+                <Button size="sm" className="gradient-primary text-white" data-testid="button-trial-continue">
+                  발명 스튜디오에서 발전시키기 <ArrowRight className="w-4 h-4 ml-1" />
+                </Button>
+              </Link>
+              <Link href="/auth">
+                <Button size="sm" variant="outline" className="border-white/20 text-white hover:bg-white/10" data-testid="button-trial-signup">
+                  저장하고 계속하기
+                </Button>
+              </Link>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -177,9 +187,6 @@ function AiTrialWidget() {
 
 export default function HomePage() {
   const { user } = useAuth();
-  const { data: publicStats } = useQuery<{ totalUsers: number; totalProjects: number; totalAnalyses: number }>({
-    queryKey: ["/api/stats/public"],
-  });
 
   return (
     <div className="min-h-screen">
@@ -203,9 +210,9 @@ export default function HomePage() {
                 아이디어는 특허 검토, 시장 검증, 사업계획, IR 자료까지 이어지는 사업화 워크스페이스로 관리됩니다.
               </p>
               <div className="mt-7 flex flex-col sm:flex-row gap-3">
-                <Link href={user ? "/invention-studio" : "/auth"}>
+                <Link href="/invention-studio">
                   <Button size="lg" className="gradient-primary text-white font-semibold px-6" data-testid="button-start-project">
-                    발명 프로젝트 시작 <ArrowRight className="w-5 h-5 ml-2" />
+                    {user ? "발명 프로젝트 시작" : "무료로 1분 체험 시작"} <ArrowRight className="w-5 h-5 ml-2" />
                   </Button>
                 </Link>
                 <Link href="/pricing">
@@ -216,13 +223,13 @@ export default function HomePage() {
               </div>
               <div className="mt-8 grid grid-cols-3 gap-3 max-w-xl">
                 {[
-                  { label: "사용자", value: publicStats?.totalUsers ?? 500 },
-                  { label: "프로젝트", value: publicStats?.totalProjects ?? 120 },
-                  { label: "AI 분석", value: publicStats?.totalAnalyses ?? 900 },
-                ].map((stat) => (
-                  <div key={stat.label} className="rounded-xl border border-white/10 bg-white/[0.04] p-4">
-                    <p className="text-2xl font-bold text-white">{stat.value.toLocaleString()}+</p>
-                    <p className="text-xs text-muted-foreground">{stat.label}</p>
+                  { title: "수준별 맞춤 AI", desc: "초·중·고·대·일반" },
+                  { title: "제출용 결과물", desc: "특허·생기부·IR" },
+                  { title: "포트폴리오", desc: "저장·수료증·공유" },
+                ].map((item) => (
+                  <div key={item.title} className="rounded-xl border border-white/10 bg-white/[0.04] p-4">
+                    <p className="text-base font-bold text-white leading-tight">{item.title}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{item.desc}</p>
                   </div>
                 ))}
               </div>
