@@ -1,0 +1,31 @@
+# Render 배포 설정 (Replit 대체) — 풀앱 한 곳 호스팅
+# 프론트+백엔드+API를 하나의 Node 웹서비스로 실행. DB는 그대로 Supabase.
+# 사용법: Render → New → Blueprint → 이 저장소 선택 → 아래 환경변수만 입력.
+services:
+  - type: web
+    name: my-best-invention
+    runtime: node
+    plan: free            # 상시가동 원하면 starter($7/mo)로 변경(콜드스타트 없음)
+    region: singapore     # 한국 사용자 기준 가까운 리전(oregon/frankfurt 등 선택 가능)
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /
+    autoDeploy: true      # GitHub main 푸시 시 자동 재배포
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # 아래 값들은 Render 대시보드에서 직접 입력(코드/깃에 노출 금지)
+      - key: DATABASE_URL                 # Supabase 연결문자열(필수)
+        sync: false
+      - key: SESSION_SECRET               # 긴 랜덤 문자열(필수)
+        sync: false
+      - key: AI_INTEGRATIONS_OPENAI_API_KEY
+        sync: false
+      - key: AI_INTEGRATIONS_OPENAI_BASE_URL
+        sync: false
+      - key: VITE_TOSS_CLIENT_KEY         # 빌드시 프론트에 주입(결제는 보류라 선택)
+        sync: false
+      - key: TOSS_CLIENT_KEY
+        sync: false
+      - key: TOSS_SECRET_KEY
+        sync: false

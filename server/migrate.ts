@@ -113,5 +113,80 @@ export async function runMigrations() {
     END $$
   `);
 
+  // ===== Billing / 수익화 + 공유 (Claude 추가) =====
+  await executeSql(`
+    CREATE TABLE IF NOT EXISTS plans (
+      id SERIAL PRIMARY KEY,
+      code TEXT NOT NULL UNIQUE,
+      name TEXT NOT NULL,
+      audience TEXT NOT NULL DEFAULT 'b2c',
+      interval TEXT NOT NULL DEFAULT 'month',
+      amount INTEGER NOT NULL,
+      ai_quota INTEGER NOT NULL DEFAULT -1,
+      features JSONB DEFAULT '[]'::jsonb,
+      active BOOLEAN NOT NULL DEFAULT true,
+      sort_order INTEGER NOT NULL DEFAULT 0
+    )
+  `);
+
+  await executeSql(`
+    CREATE TABLE IF NOT EXISTS subscriptions (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL REFERENCES users(id),
+      plan_code TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'active',
+      started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+      current_period_end TIMESTAMP,
+      organization_id INTEGER REFERENCES organizations(id),
+      seats INTEGER NOT NULL DEFAULT 1,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+    )
+  `);
+  await executeSql(`CREATE INDEX IF NOT EXISTS subscriptions_user_idx ON subscriptions(user_id)`);
+
+  await executeSql(`
+    CREATE TABLE IF NOT EXISTS orders (
+      id SERIAL PRIMARY KEY,
+      order_id TEXT NOT NULL UNIQUE,
+      user_id INTEGER REFERENCES users(id),
+      plan_code TEXT NOT NULL,
+      order_name TEXT NOT NULL,
+      amount INTEGER NOT NULL,
+      status TEXT NOT NULL DEFAULT 'pending',
+      customer_name TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+    )
+  `);
+
+  await executeSql(`
+    CREATE TABLE IF NOT EXISTS payments (
+      id SERIAL PRIMARY KEY,
+      order_id TEXT NOT NULL,
+      payment_key TEXT NOT NULL UNIQUE,
+      method TEXT,
+      amount INTEGER NOT NULL,
+      status TEXT NOT NULL,
+      approved_at TIMESTAMP,
+      raw JSONB,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+    )
+  `);
+
+  await executeSql(`
+    CREATE TABLE IF NOT EXISTS shares (
+      id SERIAL PRIMARY KEY,
+      token TEXT NOT NULL UNIQUE,
+      user_id INTEGER REFERENCES users(id),
+      author_name TEXT,
+      type TEXT NOT NULL,
+      ref_id INTEGER,
+      title TEXT NOT NULL,
+      summary TEXT,
+      payload JSONB,
+      view_count INTEGER NOT NULL DEFAULT 0,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+    )
+  `);
+
   console.log("Database migrations completed successfully");
 }
