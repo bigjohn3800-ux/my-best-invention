@@ -1,34 +1,12 @@
-// Netlify Function: Express 백엔드를 서버리스로 실행 (Replit 대체)
-// netlify.toml 에서 /api/* 를 이 함수로 라우팅한다. (테스트 검증 후 전환)
-// 주의: AI SSE 스트리밍 엔드포인트(/api/ai/*)는 일반 함수에서 스트리밍이 안 되므로,
-//       전환 1단계에서는 /api/ai/* 만 Replit으로 두고(아래 netlify.toml 참고),
-//       나머지(/api/*)를 이 함수로 옮긴다. (2단계에서 AI를 Netlify 스트리밍 함수로 이전)
-import serverless from "serverless-http";
+// 임시 스텁 — 서버리스 백엔드 이전(Replit 탈출) 전까지 비활성 상태.
+// 이유: 실제 Express 래퍼(serverless-http + 서버 전체 import)를 여기 두면
+//       Netlify가 함수 번들링을 시도하다 빌드가 깨질 수 있어, 이전 검증 전까지 스텁으로 둔다.
+// 실제 구현은 전략분석/Replit탈출_Netlify이전_계획.md 참고하여 이전 시점에 복원한다.
+// 현재 /api/* 라우팅은 netlify.toml 에서 Replit 백엔드로 프록시된다(이 함수는 사용되지 않음).
 import type { Handler } from "@netlify/functions";
-import { getServerlessApp } from "../../server/serverless-app";
 
-// 콜드스타트 시 1회만 마이그레이션/시드 실행
-let migrated = false;
-async function ensureMigrated() {
-  if (migrated) return;
-  try {
-    const { runMigrations } = await import("../../server/migrate");
-    await runMigrations();
-    const { seedDatabase } = await import("../../server/seed");
-    await seedDatabase();
-  } catch (e) {
-    console.error("[netlify] migrate/seed failed:", e);
-  }
-  migrated = true;
-}
-
-let cached: ReturnType<typeof serverless> | null = null;
-
-export const handler: Handler = async (event, context) => {
-  await ensureMigrated();
-  if (!cached) {
-    const app = await getServerlessApp();
-    cached = serverless(app);
-  }
-  return cached(event, context) as ReturnType<Handler>;
-};
+export const handler: Handler = async () => ({
+  statusCode: 503,
+  headers: { "content-type": "application/json" },
+  body: JSON.stringify({ message: "serverless backend not yet enabled" }),
+});
